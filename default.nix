@@ -7,6 +7,10 @@
 , time
 , random
 , cabal-install
+, fsnotify
+, gitlib
+, gitlib-libgit2
+, cryptonite
 }:
 
 mkDerivation {
@@ -20,6 +24,10 @@ mkDerivation {
     reflex
     time
     random
+    fsnotify
+    gitlib
+    gitlib-libgit2
+    cryptonite
   ];
   buildTools = [
     cabal-install

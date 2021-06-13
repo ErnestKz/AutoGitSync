@@ -12,6 +12,8 @@ library
                      , reflex
                      , time
                      , random
+                     , fsnotify
+                     , gitlib
                      
   
 executable frp-db
