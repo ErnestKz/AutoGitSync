@@ -14,6 +14,8 @@ library
                      , random
                      , fsnotify
                      , gitlib
+                     , gitlib-libgit2
+                     , exceptions
                      
   
 executable frp-db
