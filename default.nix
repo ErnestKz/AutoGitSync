@@ -11,7 +11,11 @@
 , gitlib
 , gitlib-libgit2
 , cryptonite
+<<<<<<< HEAD
 , process
+=======
+, exceptions
+>>>>>>> origin/main
 }:
 
 mkDerivation {
@@ -29,7 +33,11 @@ mkDerivation {
     gitlib
     gitlib-libgit2
     cryptonite
+<<<<<<< HEAD
     process
+=======
+    exceptions
+>>>>>>> origin/main
   ];
   buildTools = [
     cabal-install

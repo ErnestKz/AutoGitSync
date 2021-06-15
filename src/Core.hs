@@ -14,6 +14,7 @@ import           System.FSNotify        (startManager, watchDir, watchTree,
                                          withManager)
 import qualified System.FSNotify        as FS
 
+<<<<<<< HEAD
 -- import           Git
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Git.Libgit2
@@ -23,6 +24,16 @@ import           Data.Text
 
 data FileChange = FileChange
   deriving Show
+=======
+import           Git.Libgit2
+import           Git.Types
+
+
+import           Control.Monad          (forever)
+import           Control.Monad.Catch
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Git.Blob
+>>>>>>> origin/main
 
 core :: IO ()
 core = runHeadlessApp $ do
@@ -39,10 +50,29 @@ createWatcherEventStream  = do
     watchTree mgr "." (const True) eventTrigger
   return events
 
+<<<<<<< HEAD
 
 -- currentRepo = openRepository defaultRep
 -- a :: MonadGit r m => m r
 -- a = getRepository
+=======
+testgit :: (MonadIO m, MonadMask m) => m LgRepo
+testgit = openLgRepository defaultRepositoryOptions {repoPath = "/home/ek/TestRepo"}
+
+git :: IO ()
+git = do
+  testRepo <- testgit
+  runLgRepository testRepo $ do
+    t <- newTreeBuilder Nothing
+    -- a <- mtbBaseTreeOid t
+    a <- mtbEntryCount t
+    liftIO $ print a
+    -- blob <- hashContents $ BlobString "."
+    -- a  <- catBlob blob
+    -- liftIO $ print t'
+    return ()
+  return ()
+>>>>>>> origin/main
 
 
 
