@@ -8,14 +8,7 @@
 , random
 , cabal-install
 , fsnotify
-, gitlib
-, gitlib-libgit2
-, cryptonite
-<<<<<<< HEAD
 , process
-=======
-, exceptions
->>>>>>> origin/main
 }:
 
 mkDerivation {
@@ -30,14 +23,7 @@ mkDerivation {
     time
     random
     fsnotify
-    gitlib
-    gitlib-libgit2
-    cryptonite
-<<<<<<< HEAD
     process
-=======
-    exceptions
->>>>>>> origin/main
   ];
   buildTools = [
     cabal-install

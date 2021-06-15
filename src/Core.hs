@@ -14,14 +14,12 @@ import           System.FSNotify        (startManager, watchDir, watchTree,
                                          withManager)
 import qualified System.FSNotify        as FS
 
-import           Git.Libgit2
-import           Git.Types
-
 
 import           Control.Monad          (forever)
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Git.Blob
+
+import System.Process
 
 core :: IO ()
 core = runHeadlessApp $ do
@@ -38,24 +36,3 @@ createWatcherEventStream  = do
     watchTree mgr "." (const True) eventTrigger
   return events
 
-
-testgit :: (MonadIO m, MonadMask m) => m LgRepo
-testgit = openLgRepository defaultRepositoryOptions {repoPath = "/home/ek/TestRepo"}
-
-git :: IO ()
-git = do
-  testRepo <- testgit
-  runLgRepository testRepo $ do
-    t <- newTreeBuilder Nothing
-    -- a <- mtbBaseTreeOid t
-    a <- mtbEntryCount t
-    liftIO $ print a
-    -- blob <- hashContents $ BlobString "."
-    -- a  <- catBlob blob
-    -- liftIO $ print t'
-    return ()
-  return ()
-
-main = void $ withLibGitDo $
-       withRepository lgFactory (fromText (pack "/tmp/blah.git")) $
-           getRepository lgFactory

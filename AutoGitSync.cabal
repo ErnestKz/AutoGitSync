@@ -13,13 +13,7 @@ library
                      , time
                      , random
                      , fsnotify
-                     , gitlib
-<<<<<<< HEAD
                      , process
-=======
-                     , gitlib-libgit2
-                     , exceptions
->>>>>>> origin/main
                      
   
 executable frp-db
