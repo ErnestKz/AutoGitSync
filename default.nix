@@ -9,6 +9,7 @@
 , cabal-install
 , fsnotify
 , process
+, text
 }:
 
 mkDerivation {
@@ -24,6 +25,7 @@ mkDerivation {
     random
     fsnotify
     process
+    text
   ];
   buildTools = [
     cabal-install

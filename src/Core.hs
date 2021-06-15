@@ -9,7 +9,6 @@ import           Reflex.Host.Headless   (runHeadlessApp)
 
 
 import           Control.Concurrent     (forkIO, threadDelay)
-import           Control.Monad
 import           System.FSNotify        (startManager, watchDir, watchTree,
                                          withManager)
 import qualified System.FSNotify        as FS
@@ -18,6 +17,7 @@ import qualified System.FSNotify        as FS
 import           Control.Monad          (forever)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
+import qualified Data.Text              as T
 import           System.IO
 import           System.Process
 
@@ -40,7 +40,20 @@ test = do
   (_, Just hout, _, _) <- createProcess ( proc "ls" [] ) { std_out = CreatePipe }
   hGetContents hout >>= print
 
-gitPushFiles :: String -> IO ()
-gitPushFiles repo = do
-  createProcess $ shell "git add . && git commit -m \"test\" && git push"
-  return ()
+gitPushFiles :: IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
+gitPushFiles = createProcess $ shell "git add . && git commit -m \"test\" && git push"
+
+data ReposConfig = ReposConfig RepoPath RepoBranch
+  deriving Show
+type RepoPath = T.Text
+type RepoBranch = T.Text
+type ConfigPath = String
+
+readConfig :: IO [ReposConfig]
+readConfig = parseConfig "/Users/ek/AutoGitSync/example-config"
+
+parseConfig :: ConfigPath -> IO [ReposConfig]
+parseConfig configPath = do
+  fileLines <- fmap (T.lines . T.pack) $ openFile configPath ReadMode >>= hGetContents
+  return $ (\(x:y:_) -> ReposConfig x y) . T.splitOn "," <$> fileLines
+

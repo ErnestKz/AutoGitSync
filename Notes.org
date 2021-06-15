@@ -1,0 +1,17 @@
+Read config file for the list of repos to watch
+comma and then a branch to push logs to
+
+
+have list of file paths and branches
+
+
+watch all the file paths
+when a file changes check the current branch
+if it matches the branch in the file paths, then do the command
+else do nothing
+
+
+another event stream that watches the git repos every 30 seconds
+event triggers when the local branch is behind the remote branch
+on trigger fetch
+
