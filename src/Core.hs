@@ -16,10 +16,10 @@ import qualified System.FSNotify        as FS
 
 
 import           Control.Monad          (forever)
-import           Control.Monad.Catch
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
-import System.Process
+import           System.IO
+import           System.Process
 
 core :: IO ()
 core = runHeadlessApp $ do
@@ -36,3 +36,11 @@ createWatcherEventStream  = do
     watchTree mgr "." (const True) eventTrigger
   return events
 
+test = do
+  (_, Just hout, _, _) <- createProcess ( proc "ls" [] ) { std_out = CreatePipe }
+  hGetContents hout >>= print
+
+gitPushFiles :: String -> IO ()
+gitPushFiles repo = do
+  createProcess $ shell "git add . && git commit -m \"test\" && git push"
+  return ()
