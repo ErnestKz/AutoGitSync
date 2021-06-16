@@ -9,7 +9,7 @@ import           Reflex                 (PerformEvent (performEvent),
 import           Reflex.Host.Headless   (runHeadlessApp)
 
 import           Control.Concurrent     (forkIO, threadDelay)
-import           Control.Monad          (forever, (>=>))
+import           Control.Monad          (forever, void, (>=>))
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 
 import qualified Data.Text              as T
@@ -19,10 +19,10 @@ import qualified System.FSNotify        as FS
 import           System.IO
 import           System.Process
 
+import           GHC.Base
 import           System.Directory
 import           System.Exit
 import           System.FilePath.Posix
-
 
 
 newtype RepoRoot = RepoRoot FilePath
@@ -50,21 +50,23 @@ getRepoRootPath (RepoFileChange _ (RepoRoot repoPath) _) = repoPath
 core :: IO ()
 core = runHeadlessApp $ do
   (eExit, aExit) <- newTriggerEvent
-  fileChanges <- createWatcherEventStream
-  performEvent $ fmap (liftIO . print) fileChanges
-  -- performEvent $ fmap (liftIO . (inGitIgnore >=> print)) fileChanges
+  repos <- liftIO readConfig
+  fileChanges <- createWatcherEventStream repos
+  performEvent $ fmap (liftIO . checkAndPush) fileChanges
+  liftIO $ forkIO $ do
+    forever $ do
+      pullChanges repos
+      threadDelay 60000000
   pure eExit -- this will wait for an aExit action
 
-createWatcherEventStream :: (MonadIO m, TriggerEvent t m) => m (Event t RepoFileChange)
-createWatcherEventStream  = do
+createWatcherEventStream :: (MonadIO m, TriggerEvent t m) => [ReposConfig] -> m (Event t RepoFileChange)
+createWatcherEventStream repos = do
   (events, eventTrigger) <- newTriggerEvent
   liftIO $ do
     mgr <- startManager
-    reposBranchesConfig <- readConfig
-    print reposBranchesConfig
     mapM_
       (\(ReposConfig repoRoot@(RepoRoot repoPath) syncBranch) -> watchTree mgr repoPath ignoreDefault (eventTrigger . repoFileChange syncBranch repoRoot))
-      reposBranchesConfig
+      repos
   return events
 
 inGitFolder :: FS.Event -> Bool
@@ -76,7 +78,6 @@ isEmacsTmpFile fileEvent = take 2 (takeBaseName $ FS.eventPath fileEvent) == ".#
 ignoreDefault :: FS.Event -> Bool
 ignoreDefault fileEvent = not (inGitFolder fileEvent || isEmacsTmpFile fileEvent)
 
-
 inGitIgnore :: RepoFileChange -> IO Bool
 inGitIgnore (RepoFileChange fileEvent (RepoRoot repoPath) _) = do
   (_, _, _, processHandle) <- createProcess (shell ("git check-ignore " ++ FS.eventPath fileEvent)) {cwd = Just repoPath}
@@ -85,16 +86,29 @@ inGitIgnore (RepoFileChange fileEvent (RepoRoot repoPath) _) = do
     ExitSuccess   ->  True
     ExitFailure _ ->  False
 
-inSyncBranch :: RepoFileChange -> IO Bool
-inSyncBranch (RepoFileChange _ (RepoRoot repoPath) (RepoSyncBranch syncBranch)) = do
+inSyncBranch :: RepoRoot -> RepoSyncBranch -> IO Bool
+inSyncBranch (RepoRoot repoPath) (RepoSyncBranch syncBranch) = do
  currentBranch <- readCreateProcess ((shell "git branch --show-current") {cwd = Just repoPath}) ""
  let currentBranchWithoutNewline = init currentBranch
- print currentBranchWithoutNewline
  return $ syncBranch == currentBranchWithoutNewline
 
-gitPushFiles :: RepoFileChange -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
-gitPushFiles (RepoFileChange fileEvent (RepoRoot repoPath) _ ) = createProcess (shell "git add . && git commit -m \"Test\" && git push") {cwd = Just repoPath}
+gitPushFiles :: RepoFileChange -> IO ()
+gitPushFiles (RepoFileChange fileEvent (RepoRoot repoPath) _ ) = void (createProcess (shell "git add . && git commit -m \"Test\" && git push") {cwd = Just repoPath})
 
+checkAndPush :: RepoFileChange -> IO ()
+checkAndPush fileChange@(RepoFileChange _ repoRoot syncBranch) = do
+  gitIgnore <- inGitIgnore fileChange
+  syncBranch <- inSyncBranch repoRoot syncBranch
+  when (not gitIgnore && syncBranch) $ do
+    gitPushFiles fileChange
+
+
+pullChanges :: [ReposConfig] -> IO ()
+pullChanges repos = do
+  let pull (ReposConfig repoRoot@(RepoRoot rootPath) syncBranch) = do
+        validBranch <- inSyncBranch repoRoot syncBranch
+        when validBranch $ void $ createProcess (shell "git pull") {cwd = Just rootPath}
+  mapM_ pull repos
 
 data ReposConfig = ReposConfig RepoRoot RepoSyncBranch
   deriving Show
