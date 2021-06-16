@@ -10,6 +10,8 @@
 , fsnotify
 , process
 , text
+, filepath
+, directory
 }:
 
 mkDerivation {
@@ -26,6 +28,8 @@ mkDerivation {
     fsnotify
     process
     text
+    filepath
+    directory
   ];
   buildTools = [
     cabal-install

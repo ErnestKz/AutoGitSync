@@ -6,6 +6,11 @@ have list of file paths and branches
 
 
 watch all the file paths
+
+ignore the .gitignore files
+ignore the .git folder
+
+
 when a file changes check the current branch
 if it matches the branch in the file paths, then do the command
 else do nothing
